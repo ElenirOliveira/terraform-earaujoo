@@ -35,3 +35,24 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Build Lambda
+builds/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store

@@ -1,0 +1,27 @@
+name: "Develop Workflow"
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    uses: ./.github/workflows/00-terraform.yml
+
+    with:
+      environment: "prd"
+
+      # SUA ROLE (substituir pelo seu ARN real)
+      aws-assume-role-arn: "arn:aws:iam::SEU_ACCOUNT_ID:role/github-actions-terraform-earaujo"
+
+      aws-region: "us-east-1"
+
+      # SEUS recursos
+      aws-statefile-s3-bucket: "earaujo-terraform-state"
+
+      aws-lock-dynamodb-table: "earaujo-terraform-lock"

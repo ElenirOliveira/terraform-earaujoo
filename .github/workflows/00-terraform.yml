@@ -1,0 +1,91 @@
+name: "Terraform Workflow"
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Ambiente (dev ou prd)"
+        required: true
+        type: string
+      aws-assume-role-arn:
+        required: true
+        type: string
+      aws-region:
+        required: true
+        type: string
+      aws-statefile-s3-bucket:
+        required: true
+        type: string
+      aws-lock-dynamodb-table:
+        required: true
+        type: string
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Baixa o código do SEU repositório
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Instala Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.3
+
+      # Autenticação AWS com a SUA role
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ inputs.aws-assume-role-arn }}
+          role-session-name: terraform-earaujoo-session
+          aws-region: ${{ inputs.aws-region }}
+
+      # Verifica se deve destruir
+      - name: Read destroy config
+        id: destroy-check
+        run: |
+          DESTROY=$(jq -r ".${{ inputs.environment }}" infra/destroy_config.json)
+          echo "destroy=$DESTROY" >> $GITHUB_OUTPUT
+
+      # Init com backend do SEU projeto
+      - name: Terraform Init
+        run: |
+          cd infra
+          terraform init \
+            -backend-config="bucket=${{ inputs.aws-statefile-s3-bucket }}" \
+            -backend-config="key=terraform-earaujoo/${{ inputs.environment }}/terraform.tfstate" \
+            -backend-config="region=${{ inputs.aws-region }}" \
+            -backend-config="dynamodb_table=${{ inputs.aws-lock-dynamodb-table }}" \
+            -backend-config="encrypt=true"
+
+      # Validação
+      - name: Terraform Validate
+        run: |
+          cd infra
+          terraform validate
+
+      # Destroy (se ativado)
+      - name: Terraform Destroy
+        if: steps.destroy-check.outputs.destroy == 'true'
+        run: |
+          cd infra
+          terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }}
+          terraform destroy -var-file=envs/${{ inputs.environment }}.tfvars -auto-approve
+
+      # Plan
+      - name: Terraform Plan
+        if: steps.destroy-check.outputs.destroy != 'true'
+        run: |
+          cd infra
+          terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }}
+          terraform plan -var-file=envs/${{ inputs.environment }}.tfvars -out=${{ inputs.environment }}.tfplan
+
+      # Apply
+      - name: Terraform Apply
+        if: steps.destroy-check.outputs.destroy != 'true'
+        run: |
+          cd infra
+          terraform apply -auto-approve ${{ inputs.environment }}.tfplan
