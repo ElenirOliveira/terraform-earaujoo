@@ -8,10 +8,9 @@ module "lambda_function" {
   timeout       = 120
   memory_size   = 512
 
-  # =========================================================
-  # VARIÁVEL DE AMBIENTE (ESSENCIAL)
-  # Passa o nome do bucket do Terraform para a Lambda
-  # =========================================================
+ create_role = false
+ lambda_role = aws_iam_role.lambda_role.arn
+
   environment_variables = {
     BUCKET_NAME = var.s3_bucket_earaujoo
   }
@@ -114,6 +113,10 @@ module "step_function" {
 
   name = var.step_function_tform
 
+  create_role = false
+  use_existing_role = true
+  role_arn    = aws_iam_role.step_function_role.arn
+
   definition = <<EOF
 {
   "StartAt": "Lambda",
@@ -159,5 +162,3 @@ EOF
     Environment = var.environment
   }
 }
-
-  
