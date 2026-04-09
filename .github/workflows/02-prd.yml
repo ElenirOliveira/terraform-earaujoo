@@ -17,7 +17,7 @@ jobs:
       environment: "prd"
 
       # SUA ROLE (substituir pelo seu ARN real)
-      aws-assume-role-arn: "arn:aws:iam::SEU_ACCOUNT_ID:role/github-actions-terraform-earaujo"
+      aws-assume-role-arn: "arn:aws:iam::606120284293:role/github-actions-terraform-earaujoo"
 
       aws-region: "us-east-1"
 

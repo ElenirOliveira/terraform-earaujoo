@@ -17,11 +17,11 @@ jobs:
       environment: "dev"
 
       # SUA ROLE (substituir pelo seu ARN real)
-      aws-assume-role-arn: "arn:aws:iam::SEU_ACCOUNT_ID:role/github-actions-terraform-earaujo"
+      aws-assume-role-arn: "arn:aws:iam::606120284293:role/github-actions-terraform-earaujoo"
 
       aws-region: "us-east-1"
 
       # SEUS recursos
-      aws-statefile-s3-bucket: "earaujo-terraform-state"
+      aws-statefile-s3-bucket: "bucket-earaujo-dev"
 
-      aws-lock-dynamodb-table: "earaujo-terraform-lock"
+      aws-lock-dynamodb-table: "bucket-earaujo-dev-lock"

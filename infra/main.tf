@@ -8,8 +8,8 @@ module "lambda_function" {
   timeout       = 120
   memory_size   = 512
 
- create_role = false
- lambda_role = aws_iam_role.lambda_role.arn
+  create_role = false
+  lambda_role = aws_iam_role.lambda_role.arn
 
   environment_variables = {
     BUCKET_NAME = var.s3_bucket_earaujoo
@@ -113,9 +113,9 @@ module "step_function" {
 
   name = var.step_function_tform
 
-  create_role = false
+  create_role       = false
   use_existing_role = true
-  role_arn    = aws_iam_role.step_function_role.arn
+  role_arn          = aws_iam_role.step_function_role.arn
 
   definition = <<EOF
 {
