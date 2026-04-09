@@ -1,9 +1,9 @@
-name: "Develop Workflow"
+name: "principal Workflow"
 
 on:
   push:
     branches:
-      - develop
+      - principal
 
 permissions:
   id-token: write
@@ -24,4 +24,4 @@ jobs:
       # SEUS recursos
       aws-statefile-s3-bucket: "earaujo-terraform-state"
 
-      aws-lock-dynamodb-table: "earaujo-terraform-lock"
+      aws-lock-dynamodb-table: "earaujo-terraform-lock-prod"

@@ -47,8 +47,9 @@ jobs:
       - name: Read destroy config
         id: destroy-check
         run: |
-          DESTROY=$(jq -r ".${{ inputs.environment }}" infra/destroy_config.json)
+          DESTROY=$(jq -r ".\"${{ inputs.environment }}" infra/destroy_config.json)
           echo "destroy=$DESTROY" >> $GITHUB_OUTPUT
+
 
       # Init com backend do SEU projeto
       - name: Terraform Init
