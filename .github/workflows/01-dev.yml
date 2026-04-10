@@ -1,4 +1,4 @@
-name: "Develop Workflow"
+name: "Development Terraform Workflow"
 
 on:
   push:
@@ -24,4 +24,4 @@ jobs:
       # SEUS recursos
       aws-statefile-s3-bucket: "bucket-earaujo-dev"
 
-      aws-lock-dynamodb-table:  "earaujo-terraform-lock"
+      aws-lock-dynamodb-table: "earaujo-terraform-lock"
