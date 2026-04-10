@@ -1,0 +1,7 @@
+environment             = "dev"
+lambda_function_earaujo = "dev-us-east-1-beca-2026-lambda-pokeapi"
+s3_bucket_earaujoo      = "dev-us-east-1-beca-2026-bucket-pokeapi"
+glue_job_lz_to_sor      = "dev-us-east-1-beca-2026-glue-job-lz-bronze-pokeapi"
+glue_job_sor_to_sot     = "dev-us-east-1-beca-2026-glue-job-bronze-silver-pokeapi"
+glue_job_sot_to_spec    = "dev-us-east-1-beca-2026-glue-job-silver-gold-pokeapi"
+step_function_tform     = "dev-us-east-1-beca-2026-step-function-pokeapi"
