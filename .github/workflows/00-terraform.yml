@@ -22,9 +22,13 @@ on:
 
 jobs:
   terraform:
-    runs-on: ubuntu-latest
+   runs-on: ubuntu-latest
+   defaults:
+    run:
+     shell: bash
 
-    steps:
+
+   steps:
       # Baixa o código do SEU repositório
       - name: Checkout code
         uses: actions/checkout@v4
@@ -47,7 +51,7 @@ jobs:
       - name: Read destroy config
         id: destroy-check
         run: |
-          DESTROY=$(jq -r ".\"${{ inputs.environment }}" infra/destroy_config.json)
+          DESTROY=$(jq -r '.["${{ inputs.environment }}"]' infra/destroy_config.json)
           echo "destroy=$DESTROY" >> $GITHUB_OUTPUT
 
 
