@@ -3,7 +3,7 @@ name: "Development Terraform Workflow"
 on:
   push:
     branches:
-      - desenvolvedor
+       - develop
 
 permissions:
   id-token: write
