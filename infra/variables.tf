@@ -7,6 +7,10 @@ variable "environment" {
     error_message = "O ambiente deve ser 'dev' ou 'prd'."
   }
 }
+#variable "region" {
+  #description = "Região AWS"
+  #type        = string
+#}
 
 variable "lambda_function_earaujo" {
   description = "Nome da função AWS Lambda"

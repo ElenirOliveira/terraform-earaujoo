@@ -1,10 +1,9 @@
 # =========================================================
 # ROLE DO AWS GLUE
 # =========================================================
-# Essa role será usada pelos jobs do Glue
 
 resource "aws_iam_role" "glue_role" {
-  name = "earaujo-glue-role"
+  name = "${var.environment}-earaujo-glue-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -12,8 +11,6 @@ resource "aws_iam_role" "glue_role" {
       {
         Effect = "Allow"
         Action = "sts:AssumeRole"
-
-        # Serviço Glue assume essa role
         Principal = {
           Service = "glue.amazonaws.com"
         }
@@ -25,10 +22,9 @@ resource "aws_iam_role" "glue_role" {
 # =========================================================
 # POLICY DO GLUE
 # =========================================================
-# Permissões básicas para executar jobs
 
 resource "aws_iam_policy" "glue_policy" {
-  name = "earaujo-glue-policy"
+  name = "${var.environment}-earaujo-glue-policy"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -54,9 +50,12 @@ resource "aws_iam_role_policy_attachment" "glue_attach" {
   policy_arn = aws_iam_policy.glue_policy.arn
 }
 
-# Role responsável por executar a função lambda (coleta de dados)
+# =========================================================
+# ROLE DA LAMBDA
+# =========================================================
+
 resource "aws_iam_role" "lambda_role" {
-  name = "earaujo-lambda-role"
+  name = "${var.environment}-earaujo-lambda-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -64,8 +63,6 @@ resource "aws_iam_role" "lambda_role" {
       {
         Effect = "Allow"
         Action = "sts:AssumeRole"
-
-        # Serviço Lambda assume essa role
         Principal = {
           Service = "lambda.amazonaws.com"
         }
@@ -74,11 +71,12 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# Policy da Lambda
-# Permite escrever no S3 e gerar logs
+# =========================================================
+# POLICY DA LAMBDA
+# =========================================================
 
 resource "aws_iam_policy" "lambda_policy" {
-  name = "earaujo-lambda-policy"
+  name = "${var.environment}-earaujo-lambda-policy"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -101,10 +99,12 @@ resource "aws_iam_role_policy_attachment" "lambda_attach" {
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
-#Responsável por orquestrar Lambda + Glue
+# =========================================================
+# ROLE STEP FUNCTION
+# =========================================================
 
 resource "aws_iam_role" "step_function_role" {
-  name = "earaujo-step-function-role"
+  name = "${var.environment}-earaujo-step-function-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -112,8 +112,6 @@ resource "aws_iam_role" "step_function_role" {
       {
         Effect = "Allow"
         Action = "sts:AssumeRole"
-
-        # Serviço Step Functions assume essa role
         Principal = {
           Service = "states.amazonaws.com"
         }
@@ -122,11 +120,12 @@ resource "aws_iam_role" "step_function_role" {
   })
 }
 
-# Policy da Step Function
-# Permite chamar Lambda e executar Glue
+# =========================================================
+# POLICY STEP FUNCTION
+# =========================================================
 
 resource "aws_iam_policy" "step_function_policy" {
-  name = "earaujo-step-function-policy"
+  name = "${var.environment}-earaujo-step-function-policy"
 
   policy = jsonencode({
     Version = "2012-10-17"
