@@ -78,7 +78,7 @@ jobs:
         run: |
           cd infra
           terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }}
-          terraform destroy -var-file=envs/${{ inputs.environment }}.tfvars -auto-approve
+          terraform destroy -var-file=envs/${{ inputs.environment }}/terraform.tfvars -auto-approve
 
       # Plan
       - name: Terraform Plan
@@ -86,7 +86,7 @@ jobs:
         run: |
           cd infra
           terraform workspace select ${{ inputs.environment }} || terraform workspace new ${{ inputs.environment }}
-          terraform plan -var-file=envs/${{ inputs.environment }}.tfvars -out=${{ inputs.environment }}.tfplan
+          terraform plan -var-file=envs/${{ inputs.environment }}/terraform.tfvars -out=${{ inputs.environment }}.tfplan
 
       # Apply
       - name: Terraform Apply

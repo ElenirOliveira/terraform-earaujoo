@@ -1,0 +1,7 @@
+environment             = "prd"
+lambda_function_earaujo = "prd-us-east-1-2026-lambda-itau"
+s3_bucket_earaujoo      = "prd-us-east-1-2026-bucket-itau"
+glue_job_lz_to_sor      = "prd-us-east-1-2026-glue-job-lz-bronze-itau"
+glue_job_sor_to_sot     = "prd-us-east-1-2026-glue-job-bronze-silver-itau"
+glue_job_sot_to_spec    = "prd-us-east-1-2026-glue-job-silver-gold-itau"
+step_function_tform     = "prd-us-east-1-2026-step-function-itau"
