@@ -1,6 +1,5 @@
-# =========================================================
+
 # ROLE DO AWS GLUE
-# =========================================================
 
 resource "aws_iam_role" "glue_role" {
   name = "${var.environment}-earaujo-glue-role"
@@ -19,9 +18,7 @@ resource "aws_iam_role" "glue_role" {
   })
 }
 
-# =========================================================
 # POLICY DO GLUE
-# =========================================================
 
 resource "aws_iam_policy" "glue_policy" {
   name = "${var.environment}-earaujo-glue-policy"
@@ -41,18 +38,15 @@ resource "aws_iam_policy" "glue_policy" {
   })
 }
 
-# =========================================================
 # ATTACH POLICY NA ROLE
-# =========================================================
 
 resource "aws_iam_role_policy_attachment" "glue_attach" {
   role       = aws_iam_role.glue_role.name
   policy_arn = aws_iam_policy.glue_policy.arn
 }
 
-# =========================================================
+
 # ROLE DA LAMBDA
-# =========================================================
 
 resource "aws_iam_role" "lambda_role" {
   name = "${var.environment}-earaujo-lambda-role"
@@ -71,9 +65,7 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# =========================================================
 # POLICY DA LAMBDA
-# =========================================================
 
 resource "aws_iam_policy" "lambda_policy" {
   name = "${var.environment}-earaujo-lambda-policy"
@@ -99,9 +91,7 @@ resource "aws_iam_role_policy_attachment" "lambda_attach" {
   policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
-# =========================================================
 # ROLE STEP FUNCTION
-# =========================================================
 
 resource "aws_iam_role" "step_function_role" {
   name = "${var.environment}-earaujo-step-function-role"
@@ -120,9 +110,7 @@ resource "aws_iam_role" "step_function_role" {
   })
 }
 
-# =========================================================
 # POLICY STEP FUNCTION
-# =========================================================
 
 resource "aws_iam_policy" "step_function_policy" {
   name = "${var.environment}-earaujo-step-function-policy"
