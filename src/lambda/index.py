@@ -1,53 +1,51 @@
 import json
-import requests
 import boto3
 import os
-
+import requests
+import pandas as pd
+from io import BytesIO
 
 def lambda_handler(event, context):
-    # =========================================================
-    # 1. CONFIGURAÇÃO DA API
-    # =========================================================
-    # Substituir pela API real do seu projeto
-    url = "https://api.exemplo.com/dados"
-
-    data_list = []
-
-    # Cliente S3
-    s3 = boto3.client("s3")
 
     # =========================================================
-    # 2. BUCKET VINDO DO TERRAFORM (NÃO FIXO)
+    # 1. CONFIGURAÇÃO
     # =========================================================
     bucket_name = os.environ.get("BUCKET_NAME")
+    s3 = boto3.client("s3")
 
-    # Caminho da Landing Zone
-    file_name = "lz/raw_data.json"
+    url = "https://jsonplaceholder.typicode.com/posts"
 
     # =========================================================
-    # 3. REQUISIÇÃO DA API
+    # 2. CONSUMO DA API
     # =========================================================
-    response = requests.get(url)
+    try:
+        response = requests.get(url, timeout=10)
 
-    if response.status_code == 200:
+        if response.status_code != 200:
+            raise Exception(f"Erro HTTP: {response.status_code}")
+
         data = response.json()
 
-        # Ajustar conforme o formato da sua API
-        data_list.append(data)
-
-    else:
-        return {
-            "statusCode": response.status_code,
-            "body": json.dumps({"error": "Erro ao buscar dados da API"})
-        }
+    except Exception as e:
+        raise Exception(f"Erro ao consumir API: {str(e)}")
 
     # =========================================================
-    # 4. SALVAR NO S3 (LANDING ZONE)
+    # 3. CONVERTER PARA PARQUET
     # =========================================================
+    df = pd.DataFrame(data)
+
+    buffer = BytesIO()
+    df.to_parquet(buffer, index=False)
+
+    # =========================================================
+    # 4. SALVAR NO S3 (LZ)
+    # =========================================================
+    file_name = "LZ/test/posts.parquet"
+
     s3.put_object(
         Bucket=bucket_name,
         Key=file_name,
-        Body=json.dumps(data_list)
+        Body=buffer.getvalue()
     )
 
     # =========================================================
@@ -56,8 +54,7 @@ def lambda_handler(event, context):
     return {
         "statusCode": 200,
         "body": json.dumps({
-            "message": "Dados salvos no S3 com sucesso",
-            "bucket": bucket_name,
+            "message": "Dados salvos com sucesso",
             "path": file_name
         })
     }
