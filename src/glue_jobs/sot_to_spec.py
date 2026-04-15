@@ -3,39 +3,35 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 
-from pyspark.sql.functions import col, sum, avg, count
+from pyspark.sql.functions import col, count, avg
 
-
-# 2. PARAMETROS
+# PARAMETROS
 args = getResolvedOptions(sys.argv, ['ENV', 'BUCKET'])
-
 env = args['ENV']
 bucket = args['BUCKET']
 
-# 3. SPARK
+# SPARK
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 
-# 4. CAMINHOS
-source = f"s3://{bucket}/SOT/datasus/internacoes/"
-destination = f"s3://{bucket}/SPEC/datasus/internacoes/"
+# CAMINHOS
+source = f"s3://{bucket}/SOT/test/"
+destination = f"s3://{bucket}/SPEC/test/"
 
-# 5. LEITURA
+# LEITURA
 df = spark.read.parquet(source)
 
-
-# 6. AGREGACOES (METRICAS)
-df_spec = df.groupBy("uf_zi").agg(
-    sum("val_tot").alias("total_custo"),
-    avg("idade").alias("idade_media"),
-    count("*").alias("qtd_internacoes")
+# AGREGAÇÕES
+df_spec = df.groupBy("userid").agg(
+    count("*").alias("qtd_posts"),
+    avg("title_length").alias("media_titulo"),
+    avg("body_length").alias("media_conteudo")
 )
 
-# 7. ESCRITA
+# ESCRITA
 df_spec.write \
     .mode("overwrite") \
     .parquet(destination)
 
-# 8. LOG
 print(f"{env} | SOT to SPEC completed")
