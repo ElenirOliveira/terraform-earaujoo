@@ -1,60 +1,65 @@
 import json
 import boto3
 import os
-import requests
 import pandas as pd
 from io import BytesIO
 
 def lambda_handler(event, context):
 
-    # =========================================================
+   
     # 1. CONFIGURAÇÃO
-    # =========================================================
+  
     bucket_name = os.environ.get("BUCKET_NAME")
+
+    if not bucket_name:
+        raise Exception("Variável de ambiente BUCKET_NAME não definida")
+
     s3 = boto3.client("s3")
 
-    url = "https://jsonplaceholder.typicode.com/posts"
+    input_key = "LZ/movies/global_movies.csv"
+    output_key = "LZ/movies/global_movies.parquet"
 
-    # =========================================================
-    # 2. CONSUMO DA API
-    # =========================================================
-    try:
-        response = requests.get(url, timeout=10)
+    t
+        # 2. LER CSV DO S3
+       
+        response = s3.get_object(
+            Bucket=bucket_name,
+            Key=input_key
+        )
 
-        if response.status_code != 200:
-            raise Exception(f"Erro HTTP: {response.status_code}")
+        df = pd.read_csv(response['Body'])
 
-        data = response.json()
+      
+        # 3. PADRONIZAÇÃO (MELHORIA )
+     
+        df.columns = [c.lower() for c in df.columns]
+
+        # 4. CONVERTER PARA PARQUET
+      
+        buffer = BytesIO()
+        df.to_parquet(buffer, index=False)
+
+        # 5. SALVAR NO S3
+       
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=output_key,
+            Body=buffer.getvalue()
+        )
+
+   
+        # 6. RETORNO
+      
+        return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "message": "CSV convertido para Parquet com sucesso",
+                "input": input_key,
+                "output": output_key,
+                "linhas": len(df),
+                "colunas": len(df.columns)
+            })
+        }
 
     except Exception as e:
-        raise Exception(f"Erro ao consumir API: {str(e)}")
-
-    # =========================================================
-    # 3. CONVERTER PARA PARQUET
-    # =========================================================
-    df = pd.DataFrame(data)
-
-    buffer = BytesIO()
-    df.to_parquet(buffer, index=False)
-
-    # =========================================================
-    # 4. SALVAR NO S3 (LZ)
-    # =========================================================
-    file_name = "LZ/test/posts.parquet"
-
-    s3.put_object(
-        Bucket=bucket_name,
-        Key=file_name,
-        Body=buffer.getvalue()
-    )
-
-    # =========================================================
-    # 5. RETORNO
-    # =========================================================
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "Dados salvos com sucesso",
-            "path": file_name
-        })
-    }
+        raise Exception(f"Erro no processamento: {str(e)}")
