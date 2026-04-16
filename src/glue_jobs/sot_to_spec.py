@@ -3,35 +3,50 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 
-from pyspark.sql.functions import col, count, avg
+from pyspark.sql.functions import col, count, avg, round
 
-# PARAMETROS
+
+# 1. PARAMETROS
+
 args = getResolvedOptions(sys.argv, ['ENV', 'BUCKET'])
 env = args['ENV']
 bucket = args['BUCKET']
 
-# SPARK
+
+# 2. SPARK
+
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 
-# CAMINHOS
-source = f"s3://{bucket}/SOT/test/"
-destination = f"s3://{bucket}/SPEC/test/"
 
-# LEITURA
+# 3. CAMINHOS
+
+source = f"s3://{bucket}/SOT/movies/"
+destination = f"s3://{bucket}/SPEC/movies/"
+
+
+# 4. LEITURA
+
 df = spark.read.parquet(source)
 
-# AGREGAÇÕES
-df_spec = df.groupBy("userid").agg(
-    count("*").alias("qtd_posts"),
-    avg("title_length").alias("media_titulo"),
-    avg("body_length").alias("media_conteudo")
+# 5. AGREGAÇÕES (INSIGHTS)
+
+# análise por gênero
+df_spec = df.groupBy("genre").agg(
+    count("*").alias("qtd_filmes"),
+    round(avg("runtime_min"), 2).alias("duracao_media"),
+    round(avg("title_length"), 2).alias("titulo_medio")
 )
 
-# ESCRITA
+
+# 6. ESCRITA
+
 df_spec.write \
     .mode("overwrite") \
     .parquet(destination)
 
-print(f"{env} | SOT to SPEC completed")
+
+# 7. LOG
+# =
+print(f"{env} | SOT to SPEC movies completed")
