@@ -26,9 +26,9 @@ module "lambda_function" {
   }
 }
 
-# =========================================================
+
 # S3 BUCKET (DATA LAKE)
-# =========================================================
+
 resource "aws_s3_bucket" "data_lake" {
   bucket = var.s3_bucket_earaujoo
 
@@ -38,9 +38,9 @@ resource "aws_s3_bucket" "data_lake" {
   }
 }
 
-# =========================================================
-# 📥 UPLOAD DO DATASET (CSV)
-# =========================================================
+
+#  UPLOAD DO DATASET (CSV)
+
 resource "aws_s3_object" "movies_csv" {
   bucket = aws_s3_bucket.data_lake.id
   key    = "LZ/movies/global_movies.csv"
@@ -49,9 +49,8 @@ resource "aws_s3_object" "movies_csv" {
   etag = filemd5("../src/data/global_movies.csv")
 }
 
-# =========================================================
 #  SCRIPTS GLUE
-# =========================================================
+
 resource "aws_s3_object" "lz_to_sor_script" {
   bucket = aws_s3_bucket.data_lake.id
   key    = "jobs/lz_to_sor.py"
@@ -76,9 +75,8 @@ resource "aws_s3_object" "sot_to_spec_script" {
   etag = filemd5("../src/glue_jobs/sot_to_spec.py")
 }
 
-# =========================================================
 # GLUE JOBS
-# =========================================================
+
 resource "aws_glue_job" "lz_to_sor" {
   name        = var.glue_job_lz_to_sor
   description = "LZ → SOR (movies)"
@@ -108,10 +106,12 @@ resource "aws_glue_job" "lz_to_sor" {
 resource "aws_glue_job" "sor_to_sot" {
   name     = var.glue_job_sor_to_sot
   role_arn = aws_iam_role.glue_role.arn
+  glue_version = "5.0"
 
   command {
     script_location = "s3://${aws_s3_bucket.data_lake.bucket}/jobs/sor_to_sot.py"
     name            = "glueetl"
+    python_version = "3"
   }
 
   default_arguments = {
@@ -127,10 +127,11 @@ resource "aws_glue_job" "sor_to_sot" {
 resource "aws_glue_job" "sot_to_spec" {
   name     = var.glue_job_sot_to_spec
   role_arn = aws_iam_role.glue_role.arn
-
+  glue_version = "5.0"
   command {
     script_location = "s3://${aws_s3_bucket.data_lake.bucket}/jobs/sot_to_spec.py"
     name            = "glueetl"
+    python_version = "3"
   }
 
   default_arguments = {
@@ -143,9 +144,8 @@ resource "aws_glue_job" "sot_to_spec" {
   }
 }
 
-# =========================================================
 # STEP FUNCTION (ORQUESTRAÇÃO)
-# =========================================================
+
 module "step_function" {
   source = "terraform-aws-modules/step-functions/aws"
 

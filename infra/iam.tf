@@ -121,8 +121,17 @@ resource "aws_iam_policy" "step_function_policy" {
       {
         Effect = "Allow"
         Action = [
-          "lambda:InvokeFunction",
-          "glue:StartJobRun"
+          "lambda:InvokeFunction"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "glue:StartJobRun",
+          "glue:GetJobRun",
+          "glue:GetJobRuns",
+          "glue:ListJobs"
         ]
         Resource = "*"
       }
