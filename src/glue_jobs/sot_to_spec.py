@@ -6,47 +6,44 @@ from awsglue.context import GlueContext
 from pyspark.sql.functions import col, count, avg, round
 
 
-# 1. PARAMETROS
-
 args = getResolvedOptions(sys.argv, ['ENV', 'BUCKET'])
 env = args['ENV']
 bucket = args['BUCKET']
 
-
-# 2. SPARK
 
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 
 
-# 3. CAMINHOS
-
 source = f"s3://{bucket}/SOT/movies/"
 destination = f"s3://{bucket}/SPEC/movies/"
 
 
-# 4. LEITURA
-
 df = spark.read.parquet(source)
 
-# 5. AGREGAÇÕES (INSIGHTS)
 
-# análise por gênero
-df_spec = df.groupBy("genre").agg(
-    count("*").alias("qtd_filmes"),
-    round(avg("runtime_min"), 2).alias("duracao_media"),
-    round(avg("title_length"), 2).alias("titulo_medio")
+# padronização de segurança
+df = df.toDF(*[c.lower() for c in df.columns])
+
+
+# remover dados inválidos antes de agregar
+df = df.dropna(subset=["genero", "duracao_minutos", "tamanho_titulo"])
+
+
+# agregação
+df_spec = df.groupBy("genero").agg(
+    count("*").alias("quantidade_filmes"),
+    round(avg("duracao_minutos"), 2).alias("duracao_media"),
+    round(avg("tamanho_titulo"), 2).alias("tamanho_medio_titulo")
 )
 
 
-# 6. ESCRITA
+# ordenar (melhoria de consumo)
+df_spec = df_spec.orderBy(col("quantidade_filmes").desc())
 
+
+# escrita
 df_spec.write \
     .mode("overwrite") \
     .parquet(destination)
-
-
-# 7. LOG
-# =
-print(f"{env} | SOT to SPEC movies completed")

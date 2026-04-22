@@ -2,7 +2,7 @@ module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
 
   function_name = var.lambda_function_earaujo
-  description   = "Lambda que consulta"
+  description   = "Lambda que processa dataset de filmes"
   handler       = "index.lambda_handler"
   runtime       = "python3.12"
   timeout       = 120
@@ -26,6 +26,9 @@ module "lambda_function" {
   }
 }
 
+
+# S3 BUCKET (DATA LAKE)
+
 resource "aws_s3_bucket" "data_lake" {
   bucket = var.s3_bucket_earaujoo
 
@@ -35,19 +38,50 @@ resource "aws_s3_bucket" "data_lake" {
   }
 }
 
+
+#  UPLOAD DO DATASET (CSV)
+
+resource "aws_s3_object" "movies_csv" {
+  bucket = aws_s3_bucket.data_lake.id
+  key    = "LZ/movies/global_movies.csv"
+  source = "../src/data/global_movies.csv"
+
+  etag = filemd5("../src/data/global_movies.csv")
+}
+
+#  SCRIPTS GLUE
+
 resource "aws_s3_object" "lz_to_sor_script" {
   bucket = aws_s3_bucket.data_lake.id
   key    = "jobs/lz_to_sor.py"
   source = "../src/glue_jobs/lz_to_sor.py"
+
+  etag = filemd5("../src/glue_jobs/lz_to_sor.py")
 }
+
+resource "aws_s3_object" "sor_to_sot_script" {
+  bucket = aws_s3_bucket.data_lake.id
+  key    = "jobs/sor_to_sot.py"
+  source = "../src/glue_jobs/sor_to_sot.py"
+
+  etag = filemd5("../src/glue_jobs/sor_to_sot.py")
+}
+
+resource "aws_s3_object" "sot_to_spec_script" {
+  bucket = aws_s3_bucket.data_lake.id
+  key    = "jobs/sot_to_spec.py"
+  source = "../src/glue_jobs/sot_to_spec.py"
+
+  etag = filemd5("../src/glue_jobs/sot_to_spec.py")
+}
+
+# GLUE JOBS
 
 resource "aws_glue_job" "lz_to_sor" {
   name        = var.glue_job_lz_to_sor
-  description = "Processamento da camada LZ para SOR"
+  description = "LZ → SOR (movies)"
 
-  # CORREÇÃO: usa a role criada no Terraform
-  role_arn = aws_iam_role.glue_role.arn
-
+  role_arn     = aws_iam_role.glue_role.arn
   glue_version = "5.0"
 
   number_of_workers = 2
@@ -59,54 +93,58 @@ resource "aws_glue_job" "lz_to_sor" {
     python_version  = "3"
   }
 
+  default_arguments = {
+    "--ENV"    = var.environment
+    "--BUCKET" = var.s3_bucket_earaujoo
+  }
+
   tags = {
     Environment = var.environment
   }
 }
 
-resource "aws_s3_object" "sor_to_sot_script" {
-  bucket = aws_s3_bucket.data_lake.id
-  key    = "jobs/sor_to_sot.py"
-  source = "../src/glue_jobs/sor_to_sot.py"
-}
-
 resource "aws_glue_job" "sor_to_sot" {
-  name = var.glue_job_sor_to_sot
-
-  # CORREÇÃO: usa a role criada no Terraform
+  name     = var.glue_job_sor_to_sot
   role_arn = aws_iam_role.glue_role.arn
+  glue_version = "5.0"
 
   command {
     script_location = "s3://${aws_s3_bucket.data_lake.bucket}/jobs/sor_to_sot.py"
     name            = "glueetl"
+    python_version = "3"
+  }
+
+  default_arguments = {
+    "--ENV"    = var.environment
+    "--BUCKET" = var.s3_bucket_earaujoo
   }
 
   tags = {
     Environment = var.environment
   }
-}
-
-resource "aws_s3_object" "sot_to_spec_script" {
-  bucket = aws_s3_bucket.data_lake.id
-  key    = "jobs/sot_to_spec.py"
-  source = "../src/glue_jobs/sot_to_spec.py"
 }
 
 resource "aws_glue_job" "sot_to_spec" {
-  name = var.glue_job_sot_to_spec
-
-  # CORREÇÃO: usa a role criada no Terraform
+  name     = var.glue_job_sot_to_spec
   role_arn = aws_iam_role.glue_role.arn
-
+  glue_version = "5.0"
   command {
     script_location = "s3://${aws_s3_bucket.data_lake.bucket}/jobs/sot_to_spec.py"
     name            = "glueetl"
+    python_version = "3"
+  }
+
+  default_arguments = {
+    "--ENV"    = var.environment
+    "--BUCKET" = var.s3_bucket_earaujoo
   }
 
   tags = {
     Environment = var.environment
   }
 }
+
+# STEP FUNCTION (ORQUESTRAÇÃO)
 
 module "step_function" {
   source = "terraform-aws-modules/step-functions/aws"
