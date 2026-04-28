@@ -184,11 +184,11 @@ resource "aws_glue_catalog_table" "movies_table" {
     }
     columns {
       name = "blockbuster_flag"
-      type = "boolean"
+      type = "int"
     }
     columns {
       name = "franchise_flag"
-      type = "boolean"
+      type = "int"
     }
   }
 }
