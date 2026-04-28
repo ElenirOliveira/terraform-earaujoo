@@ -49,6 +49,150 @@ resource "aws_s3_object" "movies_csv" {
   etag = filemd5("../src/data/global_movies.csv")
 }
 
+# GLUE DATABASE
+
+resource "aws_glue_catalog_database" "movies_database" {
+  name = var.glue_database_name
+}
+
+# GLUE CATALOG TABLE
+
+resource "aws_glue_catalog_table" "movies_table" {
+  name          = var.glue_table_name
+  database_name = aws_glue_catalog_database.movies_database.name
+
+  table_type = "EXTERNAL_TABLE"
+
+  parameters = {
+    "classification" = "parquet"
+    "typeOfData"     = "file"
+  }
+
+  storage_descriptor {
+    location      = "s3://${aws_s3_bucket.data_lake.bucket}/SOR/movies/"
+    input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
+
+    ser_de_info {
+      name                  = "ParquetSerDe"
+      serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+
+      parameters = {
+        "serialization.format" = "1"
+      }
+    }
+
+    columns {
+      name = "movie_id"
+      type = "bigint"
+    }
+    columns {
+      name = "title"
+      type = "string"
+    }
+    columns {
+      name = "release_year"
+      type = "int"
+    }
+    columns {
+      name = "decade"
+      type = "int"
+    }
+    columns {
+      name = "runtime_min"
+      type = "int"
+    }
+    columns {
+      name = "genre"
+      type = "string"
+    }
+    columns {
+      name = "subgenre"
+      type = "string"
+    }
+    columns {
+      name = "director"
+      type = "string"
+    }
+    columns {
+      name = "lead_actor"
+      type = "string"
+    }
+    columns {
+      name = "lead_actress"
+      type = "string"
+    }
+    columns {
+      name = "country"
+      type = "string"
+    }
+    columns {
+      name = "language"
+      type = "string"
+    }
+    columns {
+      name = "imdb_rating"
+      type = "double"
+    }
+    columns {
+      name = "votes"
+      type = "bigint"
+    }
+    columns {
+      name = "budget_million"
+      type = "double"
+    }
+    columns {
+      name = "marketing_budget_million"
+      type = "double"
+    }
+    columns {
+      name = "revenue_million"
+      type = "double"
+    }
+    columns {
+      name = "roi_pct"
+      type = "double"
+    }
+    columns {
+      name = "popularity_score"
+      type = "double"
+    }
+    columns {
+      name = "metascore"
+      type = "int"
+    }
+    columns {
+      name = "audience_score"
+      type = "int"
+    }
+    columns {
+      name = "streaming_platform"
+      type = "string"
+    }
+    columns {
+      name = "award_nominations"
+      type = "int"
+    }
+    columns {
+      name = "award_wins"
+      type = "int"
+    }
+    columns {
+      name = "top_100_prob"
+      type = "double"
+    }
+    columns {
+      name = "blockbuster_flag"
+      type = "int"
+    }
+    columns {
+      name = "franchise_flag"
+      type = "int"
+    }
+  }
+}
+
 #  SCRIPTS GLUE
 
 resource "aws_s3_object" "lz_to_sor_script" {
@@ -104,14 +248,14 @@ resource "aws_glue_job" "lz_to_sor" {
 }
 
 resource "aws_glue_job" "sor_to_sot" {
-  name     = var.glue_job_sor_to_sot
-  role_arn = aws_iam_role.glue_role.arn
+  name         = var.glue_job_sor_to_sot
+  role_arn     = aws_iam_role.glue_role.arn
   glue_version = "5.0"
 
   command {
     script_location = "s3://${aws_s3_bucket.data_lake.bucket}/jobs/sor_to_sot.py"
     name            = "glueetl"
-    python_version = "3"
+    python_version  = "3"
   }
 
   default_arguments = {
@@ -125,13 +269,13 @@ resource "aws_glue_job" "sor_to_sot" {
 }
 
 resource "aws_glue_job" "sot_to_spec" {
-  name     = var.glue_job_sot_to_spec
-  role_arn = aws_iam_role.glue_role.arn
+  name         = var.glue_job_sot_to_spec
+  role_arn     = aws_iam_role.glue_role.arn
   glue_version = "5.0"
   command {
     script_location = "s3://${aws_s3_bucket.data_lake.bucket}/jobs/sot_to_spec.py"
     name            = "glueetl"
-    python_version = "3"
+    python_version  = "3"
   }
 
   default_arguments = {
@@ -199,4 +343,4 @@ EOF
     Name        = "earaujo-orchestrator"
     Environment = var.environment
   }
-}
+} 
