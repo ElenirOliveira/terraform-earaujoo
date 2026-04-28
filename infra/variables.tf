@@ -41,3 +41,13 @@ variable "step_function_tform" {
   description = "Nome da AWS Step Function responsável pela orquestração"
   type        = string
 }
+
+variable "glue_database_name" {
+  description = "Nome do banco de dados no Glue Catalog"
+  type        = string
+}
+
+variable "glue_table_name" {
+  description = "Nome da tabela no Glue Catalog"
+  type        = string
+}
